@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "node .next/standalone/server.js",
-    "preview": "echo Building and running production standalone... && npm run build && node scripts/prepare-standalone.mjs && node .next/standalone/server.js",
+    "preview": "echo Building and running production standalone... && npm run build && node scripts/prepare-standalone.mjs && node --env-file=.env.local .next/standalone/server.js",
     "lint": "next lint",
     "postinstall": "node scripts/gen-sgds-ambient.cjs"
   },

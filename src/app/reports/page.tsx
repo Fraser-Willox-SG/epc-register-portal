@@ -15,20 +15,29 @@ type Report = {
   available_files: ReportFile[];
 };
 
+const reportDescriptions: Record<string, string> = {
+  ApprovedOrganisationAssessorActivity:
+    "Assessor activity for approved organisations.",
+
+  ApprovedOrganisationAssessorActivityNonDomestic:
+    "Non-domestic assessor activity for approved organisations.",
+
+  AssessorStatus: "Current status information for assessors.",
+
+  MonthlyLodgementsByLocalAuthorityTable:
+    "Monthly lodgement totals grouped by local authority.",
+
+  TransactionTypeReportNumberOfLodgementsMonthlyTable:
+    "Monthly lodgement totals grouped by transaction type.",
+
+  TransactionTypeReportNumberOfLodgementsMonthlyTableNonDomestic:
+    "Non-domestic monthly lodgement totals grouped by transaction type.",
+};
+
 function prettifyReportName(name: string) {
   return name
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/Non Domestic/g, "Non Domestic");
-}
-
-function splitFilename(filename: string) {
-  return filename
-    .replace(/([a-z])([A-Z])/g, "$1\u200B$2")
-    .replace(/([A-Z][a-z])/g, "\u200B$1");
-}
-
-function reportFilename(reportName: string, format: "csv" | "xlsx") {
-  return `${reportName}.${format}`;
 }
 
 function DownloadCell({
@@ -48,14 +57,18 @@ function DownloadCell({
         href={`/api/sg/reports/download/${reportName}?format=${format}`}
         className="ds_link"
       >
-        {splitFilename(reportFilename(reportName, format))}
+        Download {format.toUpperCase()}
       </Link>
 
       <br />
 
       <span className="ds_hint-text">
         {formatFileSizeKb(file.file_size_kb)}
-        {" · "}
+      </span>
+
+      <br />
+
+      <span className="ds_hint-text">
         {formatShortOrdinalDate(file.last_updated)}
       </span>
     </>
@@ -109,6 +122,7 @@ export default async function ReportsPage() {
           <thead>
             <tr>
               <th scope="col">Report name</th>
+              <th scope="col">Description</th>
               <th scope="col">CSV</th>
               <th scope="col">XLSX</th>
             </tr>
@@ -129,6 +143,11 @@ export default async function ReportsPage() {
                   <td>{prettifyReportName(report.report_name)}</td>
 
                   <td>
+                    {reportDescriptions[report.report_name] ??
+                      "Report available for download."}
+                  </td>
+
+                  <td className="ds_nowrap">
                     <DownloadCell
                       file={csv}
                       reportName={report.report_name}
@@ -136,7 +155,7 @@ export default async function ReportsPage() {
                     />
                   </td>
 
-                  <td>
+                  <td className="ds_nowrap">
                     <DownloadCell
                       file={xlsx}
                       reportName={report.report_name}

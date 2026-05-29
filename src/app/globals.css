@@ -155,6 +155,10 @@ body {
   justify-content: center;
 }
 
+.ds_nowrap {
+  white-space: nowrap;
+}
+
 th.table-cell-center,
 td.table-cell-center {
   text-align: center;
