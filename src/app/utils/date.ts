@@ -13,19 +13,7 @@ function getOrdinalSuffix(day: number): string {
   }
 }
 
-export function formatDecLongDate(isoDate: string): string {
-  const date = new Date(isoDate);
-
-  const day = date.getDate();
-  const suffix = getOrdinalSuffix(day);
-
-  const month = date.toLocaleString("en-GB", { month: "short" });
-  const year = date.getFullYear();
-
-  return `${day}${suffix} ${month} ${year}`;
-}
-
-export function formatDecDate(rawDate?: string | null): string {
+export function formatShortOrdinalDate(rawDate?: string | null): string {
   const value = (rawDate ?? "").trim();
 
   if (!value) return "—";
@@ -35,22 +23,24 @@ export function formatDecDate(rawDate?: string | null): string {
   if (isNaN(date.getTime())) return "—";
 
   const day = date.getDate();
-
-  const suffix =
-    day > 3 && day < 21
-      ? "th"
-      : ["th", "st", "nd", "rd"][Math.min(day % 10, 3)];
-
+  const suffix = getOrdinalSuffix(day);
   const month = date.toLocaleString("en-GB", { month: "short" });
   const year = date.getFullYear();
 
   return `${day}${suffix} ${month} ${year}`;
 }
 
-export function formatIsoDateLong(iso: string) {
-  const [y, m, d] = iso.split("-").map(Number);
-  if (!y || !m || !d) return iso; // fallback
-  const date = new Date(Date.UTC(y, m - 1, d)); // avoid TZ shifts
+export function formatLongDate(rawDate?: string | null): string {
+  const value = (rawDate ?? "").trim();
+
+  if (!value) return "—";
+
+  const [y, m, d] = value.split("-").map(Number);
+
+  if (!y || !m || !d) return "—";
+
+  const date = new Date(Date.UTC(y, m - 1, d));
+
   return date.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
@@ -65,10 +55,7 @@ export function isExpiredDate(dateOfExpiry?: string | null): boolean {
 
   if (isNaN(expiry.getTime())) return false;
 
-  const now = new Date();
-
-  // Treat certificate as valid until end of expiry day
   expiry.setHours(23, 59, 59, 999);
 
-  return expiry < now;
+  return expiry < new Date();
 }

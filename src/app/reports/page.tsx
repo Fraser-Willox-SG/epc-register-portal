@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { selfUrl } from "@/app/utils/self-url";
+import { formatShortOrdinalDate } from "@/app/utils/date";
+import { formatFileSizeKb } from "@/app/utils/format-file-size";
 
 type ReportFile = {
   name: string;
   endpoint: string;
+  last_updated: string | null;
+  file_size_kb: number | null;
 };
 
 type Report = {
@@ -11,10 +15,64 @@ type Report = {
   available_files: ReportFile[];
 };
 
+const reportDescriptions: Record<string, string> = {
+  ApprovedOrganisationAssessorActivity:
+    "Assessor activity for approved organisations.",
+
+  ApprovedOrganisationAssessorActivityNonDomestic:
+    "Non-domestic assessor activity for approved organisations.",
+
+  AssessorStatus: "Current status information for assessors.",
+
+  MonthlyLodgementsByLocalAuthorityTable:
+    "Monthly lodgement totals grouped by local authority.",
+
+  TransactionTypeReportNumberOfLodgementsMonthlyTable:
+    "Monthly lodgement totals grouped by transaction type.",
+
+  TransactionTypeReportNumberOfLodgementsMonthlyTableNonDomestic:
+    "Non-domestic monthly lodgement totals grouped by transaction type.",
+};
+
 function prettifyReportName(name: string) {
   return name
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/Non Domestic/g, "Non Domestic");
+}
+
+function DownloadCell({
+  file,
+  reportName,
+  format,
+}: {
+  file?: ReportFile;
+  reportName: string;
+  format: "csv" | "xlsx";
+}) {
+  if (!file) return <>—</>;
+
+  return (
+    <>
+      <Link
+        href={`/api/sg/reports/download/${reportName}?format=${format}`}
+        className="ds_link"
+      >
+        Download {format.toUpperCase()}
+      </Link>
+
+      <br />
+
+      <span className="ds_hint-text">
+        {formatFileSizeKb(file.file_size_kb)}
+      </span>
+
+      <br />
+
+      <span className="ds_hint-text">
+        {formatShortOrdinalDate(file.last_updated)}
+      </span>
+    </>
+  );
 }
 
 export default async function ReportsPage() {
@@ -45,9 +103,9 @@ export default async function ReportsPage() {
         <h1>Reports</h1>
       </div>
 
-      <h2 className="ds_h3">Internal Reporting and Data Extracting Tool</h2>
+      {/* <h2 className="ds_h3">Internal Reporting and Data Extracting Tool</h2> */}
 
-      <p>Choose to download a report by CSV or XLSX.</p>
+      <p>Choose to download a report, as a CSV or XLSX file.</p>
 
       {/* <h2 className="ds_h4 ds_mt-5">Report List</h2> */}
 
@@ -64,8 +122,9 @@ export default async function ReportsPage() {
           <thead>
             <tr>
               <th scope="col">Report name</th>
-              <th scope="col">Download CSV</th>
-              <th scope="col">Download XLSX</th>
+              <th scope="col">Description</th>
+              <th scope="col">CSV</th>
+              <th scope="col">XLSX</th>
             </tr>
           </thead>
 
@@ -84,29 +143,24 @@ export default async function ReportsPage() {
                   <td>{prettifyReportName(report.report_name)}</td>
 
                   <td>
-                    {csv ? (
-                      <Link
-                        href={`/api/sg/reports/download/${report.report_name}?format=csv`}
-                        className="ds_link"
-                      >
-                        CSV
-                      </Link>
-                    ) : (
-                      "—"
-                    )}
+                    {reportDescriptions[report.report_name] ??
+                      "Report available for download."}
                   </td>
 
-                  <td>
-                    {xlsx ? (
-                      <Link
-                        href={`/api/sg/reports/download/${report.report_name}?format=xlsx`}
-                        className="ds_link"
-                      >
-                        XLSX
-                      </Link>
-                    ) : (
-                      "—"
-                    )}
+                  <td className="ds_nowrap">
+                    <DownloadCell
+                      file={csv}
+                      reportName={report.report_name}
+                      format="csv"
+                    />
+                  </td>
+
+                  <td className="ds_nowrap">
+                    <DownloadCell
+                      file={xlsx}
+                      reportName={report.report_name}
+                      format="xlsx"
+                    />
                   </td>
                 </tr>
               );
